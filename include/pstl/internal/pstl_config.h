@@ -52,7 +52,11 @@
 #if !defined(__PSTL_USE_TBB)
 #define __PSTL_USE_TBB 1
 #endif
+#if !defined(__PSTL_USE_OPENMP)
+#define __PSTL_USE_OPENMP 1
+#endif
 #else
+#undef __PSTL_USE_OPENMP
 #undef __PSTL_USE_TBB
 #endif
 

@@ -32,6 +32,8 @@
 
 #if __PSTL_USE_TBB
     #include "parallel_impl_tbb.h"
+#elif __PSTL_USE_OPENMP
+    #include "parallel_impl_openmp.h"
 #else
     __PSTL_PRAGMA_MESSAGE("Backend was not specified");
 #endif
