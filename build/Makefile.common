@@ -96,19 +96,25 @@ else
 endif
 
 # compiler specific keys
-ifneq (, $(filter $(compiler), gcc g++))
-    include $(proj_root)/build/gcc.inc
-endif
 
-ifneq (, $(filter $(compiler), clang clang++))
+ifeq (clang,$(findstring clang, $(compiler)))
+    $(info Clang detected)
     include $(proj_root)/build/clang.inc
+else
+    # must look for g++ only after we exclude clang++
+    ifeq (g++, $(findstring g++, $(compiler)))
+        $(info GCC detected)
+	include $(proj_root)/build/gcc.inc
+    endif
 endif
 
 ifneq (, $(filter $(compiler), icc icpc icx))
+    $(info ICC detected)
     include $(proj_root)/build/icc.inc
 endif
 
 ifneq (, $(filter $(compiler), icl))
+    $(info ICL detected)
     include $(proj_root)/build/icl.inc
 endif
 
