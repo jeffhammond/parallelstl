@@ -48,14 +48,7 @@
 #define __PSTL_USE_PAR_POLICIES 1
 #endif
 
-#if __PSTL_USE_PAR_POLICIES
-#if !defined(__PSTL_USE_TBB)
-#define __PSTL_USE_TBB 1
-#endif
-#if !defined(__PSTL_USE_OPENMP)
-#define __PSTL_USE_OPENMP 1
-#endif
-#else
+#if !defined(__PSTL_USE_PAR_POLICIES)
 #undef __PSTL_USE_OPENMP
 #undef __PSTL_USE_TBB
 #endif
@@ -96,6 +89,7 @@
 #else
 #define __PSTL_PRAGMA_SIMD __PSTL_PRAGMA(clang loop vectorize(enable))
 #endif
+#define __PSTL_PRAGMA_SIMD_REDUCTION(PRM)
 #else //no simd
 #define __PSTL_PRAGMA_SIMD
 #define __PSTL_PRAGMA_SIMD_REDUCTION(PRM)
