@@ -16,7 +16,7 @@
 #
 #
 
-override compiler:=clang++
+#override compiler:=clang++
 
 ifneq ($(target),android)
     PSTL_ARCH += $(KEY)march=native
@@ -30,6 +30,7 @@ CPLUS_FLAGS += $(FQKEY)std=$(stdver)
 # CPLUS_FLAGS += -stdlib=libc++
 ifeq ($(backend),omp)
     CPLUS_FLAGS += -fopenmp
+    OPENMP_LDFLAGS = -fopenmp
 else
     # CPLUS_FLAGS += -fopenmp-simd //it will be supported in he future version
 endif
