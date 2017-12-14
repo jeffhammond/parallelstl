@@ -79,9 +79,23 @@
 #if (_OPENMP >= 201307) || (__INTEL_COMPILER >= 1600) || (__PSTL_GCC_VERSION >= 40900)
 #define __PSTL_PRAGMA_SIMD __PSTL_PRAGMA(omp simd)
 #define __PSTL_PRAGMA_SIMD_REDUCTION(PRM) __PSTL_PRAGMA(omp simd reduction(PRM))
-#elif !defined(_MSC_VER) //#pragma simd
+// Intel compiler supports "simd"
+#elif defined(__INTEL_COMPILER)
 #define __PSTL_PRAGMA_SIMD __PSTL_PRAGMA(simd)
 #define __PSTL_PRAGMA_SIMD_REDUCTION(PRM) __PSTL_PRAGMA(simd reduction(PRM))
+// GCC has "ivdep" in its namespace
+#elif defined(__GNUC__) && defined(__GNUC_MINOR__) && \
+      ( ( (__GNUC__ == 4) && (__GNUC_MINOR__ == 9) ) || (__GNUC__ >= 5) )
+#define __PSTL_PRAGMA_SIMD __PSTL_PRAGMA(GCC ivdep)
+#define __PSTL_PRAGMA_SIMD_REDUCTION(PRM)
+// Clang has another syntax
+#elif defined(__clang__)
+#if defined(__clang_major__) && defined(__clang_minor__) && \
+    ( (__clang_major__ >= 4 ) ||  (__clang_major__ >= 3 && __clang_minor__ > 7) )
+#define __PSTL_PRAGMA_SIMD __PSTL_PRAGMA(clang loop vectorize(assume_safety))
+#else
+#define __PSTL_PRAGMA_SIMD __PSTL_PRAGMA(clang loop vectorize(enable))
+#endif
 #else //no simd
 #define __PSTL_PRAGMA_SIMD
 #define __PSTL_PRAGMA_SIMD_REDUCTION(PRM)
