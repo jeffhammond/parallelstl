@@ -23,9 +23,15 @@
 .SUFFIXES:
 
 ifeq (, $(filter $(MAKECMDGOALS), clean clean_all))
-    ifeq (, $(filter $(backend), tbb))
-        $(info Threading backend was not specified; using TBB)
-        backend=tbb
+    ifeq (omp,$(filter omp,$(backend)))
+        $(info Using OpenMP backend)
+    else
+        ifeq (tbb,$(filter tbb,$(backend)))
+            $(info Using TBB backend)
+        else
+            $(info Threading backend was not specified; using TBB)
+            backend=tbb
+        endif
     endif
     ifeq (, $(filter $(linkage), shared static none))
         $(warning using linkage=none (header-only implementation))
@@ -60,6 +66,10 @@ stdver ?= c++11
 override INCLUDES += -I$(proj_root)/include -I$(proj_root)/test 
 
 TEST_MACRO += -D__PSTL_TEST_SUCCESSFUL_KEYWORD=1
+
+ifeq ($(backend), omp)
+    BACKEND_MACRO += -D__PSTL_USE_OPENMP
+endif
 
 ifeq ($(backend), tbb)
     BACKEND_MACRO += -D__PSTL_USE_TBB

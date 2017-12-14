@@ -28,4 +28,8 @@ CPLUS_FLAGS += $(FQKEY)std=$(stdver)
 # XHOST_FLAG = $(KEY)mavx512f -fno-vectorize
 # DYN_LDFLAGS += $(LINK_KEY)c++ 
 # CPLUS_FLAGS += -stdlib=libc++
-# CPLUS_FLAGS += -fopenmp-simd //it will be supported in he future version
+ifeq ($(backend),omp)
+    CPLUS_FLAGS += -fopenmp
+else
+    # CPLUS_FLAGS += -fopenmp-simd //it will be supported in he future version
+endif

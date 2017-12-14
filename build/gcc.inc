@@ -26,7 +26,11 @@ ifneq (, $(shell gcc -dumpversion | egrep  "^4\.9\.[0-9]"))
     CPLUS_FLAGS += -fopenmp-simd
 endif
 ifneq (, $(shell gcc -dumpversion | egrep  "^[5-9]\.[0-9]\.[0-9]"))
-    CPLUS_FLAGS += -fopenmp-simd
+    ifeq ($(backend),omp)
+        CPLUS_FLAGS += -fopenmp
+    else
+        CPLUS_FLAGS += -fopenmp-simd
+    endif
 #   CPLUS_FLAGS += -fdump-rtl-loop2 #use this option to enable optimization report
 endif
 
