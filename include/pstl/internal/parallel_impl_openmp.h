@@ -22,8 +22,27 @@
 #define __PSTL_parallel_impl_openmp_H
 
 #include <atomic>
+// This header defines the minimum set of parallel routines required to support Parallel STL,
+// implemented on top of OpenMP(R).
 
-#include <omp.h>
+#if !defined(_OPENMP)
+  #error _OPENMP not defined.
+#else
+  #include <omp.h>
+  #if (_OPENMP <= 200505)
+    #warning OpenMP 2.5 or older
+  #elif (_OPENMP == 200805)
+    #warning OpenMP 3.0
+  #elif (_OPENMP == 201107)
+    #warning OpenMP 3.1
+  #elif (_OPENMP == 201307)
+  //  #warning OpenMP 4.0
+  #elif (_OPENMP == 201511)
+  //  #warning OpenMP 4.5
+  #else
+    #warning Unknown version of OpenMP.
+  #endif
+#endif
 
 namespace pstl {
 namespace par_backend {
@@ -47,12 +66,32 @@ public:
     ~raw_buffer() { operator delete(ptr); }
 };
 
+inline void cancel_execution() {
+}
+
 //------------------------------------------------------------------------
 // parallel_for
 //------------------------------------------------------------------------
 
+//! Evaluation of brick f[i,j) for each subrange [i,j) of [first,last)
+// wrapper over omp-[parallel-master]-taskloop
 template<class Index, class F>
 void parallel_for(Index first, Index last, F f) {
+    if (omp_in_parallel()) {
+        _Pragma("omp taskloop")
+        for (Index i = first; i < last; ++i) {
+            f(i,i+1);
+        }
+    } else {
+        _Pragma("omp parallel")
+        _Pragma("omp master")
+        {
+            _Pragma("omp taskloop")
+            for (Index i = first; i < last; ++i) {
+                //f(i);
+            }
+        }
+    }
 }
 
 template<class Value, class Index, typename RealBody, typename Reduction>
