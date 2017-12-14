@@ -30,6 +30,7 @@ endif
 
 ifeq ($(backend),omp)
     CPLUS_FLAGS += $(QKEY)openmp
+    OPENMP_LDFLAGS = $(QKEY)openmp
 else
     CPLUS_FLAGS += $(QKEY)openmp-simd
 endif

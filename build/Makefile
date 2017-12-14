@@ -54,7 +54,7 @@ $(PSTL_LIB_NAME):
 	$(MAKE) -f $(PSTL_MAKEFILE) backend=$(backend) linkage=$(linkage) cfg=$(cfg)
 
 test_%.exe: test_%$(OBJ_SFX) $(PSTL_LIB_NAME)
-	$(info LIBRARY_PATH=$(LIBRARY_PATH))
+	#$(info LIBRARY_PATH=$(LIBRARY_PATH))
 	$(LD) $< $(LD_OUT_KEY)$@ $(LDFLAGS) $(DYN_LDFLAGS) $(PSTL_LIB_LINK)
 
 test_%: test_%.exe

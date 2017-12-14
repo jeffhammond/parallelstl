@@ -16,4 +16,10 @@
 #
 #
 
-DYN_LDFLAGS += -Wl,-rpath,$(TBBROOT)/lib
+ifeq ($(backend), tbb)
+    DYN_LDFLAGS += -Wl,-rpath,$(TBBROOT)/lib
+else
+    ifeq ($(backend), omp)
+        DYN_LDFLAGS += $(OPENMP_LDFLAGS)
+    endif
+endif
