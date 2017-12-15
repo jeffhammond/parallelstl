@@ -44,13 +44,8 @@
 #undef __PSTL_USE_PAR_POLICIES
 #define __PSTL_USE_PAR_POLICIES PSTL_USE_PARALLEL_POLICIES
 // Check the internal macro for parallel policies
-#elif !defined(__PSTL_USE_PAR_POLICIES) 
+#elif !defined(__PSTL_USE_PAR_POLICIES)
 #define __PSTL_USE_PAR_POLICIES 1
-#endif
-
-#if !defined(__PSTL_USE_PAR_POLICIES)
-#undef __PSTL_USE_OPENMP
-#undef __PSTL_USE_TBB
 #endif
 
 // Portability "#pragma" definition

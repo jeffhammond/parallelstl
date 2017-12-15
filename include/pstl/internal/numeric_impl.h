@@ -28,14 +28,6 @@
 
 #include "execution_policy_impl.h"
 
-#if __PSTL_USE_TBB
-    #include "parallel_impl_tbb.h"
-#elif __PSTL_USE_OPENMP
-    #include "parallel_impl_openmp.h"
-#else
-    __PSTL_PRAGMA_MESSAGE("Backend was not specified");
-#endif
-
 namespace pstl {
 namespace internal {
 //------------------------------------------------------------------------
@@ -93,6 +85,7 @@ T pattern_transform_reduce(InputIterator1 first1, InputIterator1 last1, InputIte
 template<class InputIterator1, class InputIterator2, class T, class BinaryOperation1, class BinaryOperation2, class IsVector>
 T pattern_transform_reduce(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2, T init, BinaryOperation1 binary_op1, BinaryOperation2 binary_op2, IsVector is_vector,  /*is_parallel=*/std::true_type) noexcept {
     return except_handler([&]() {
+#if 0
         return par_backend::parallel_transform_reduce(first1, last1,
             [first1, first2, binary_op2](InputIterator1 i) mutable { return binary_op2(*i, *(first2 + (i - first1))); },
             init,
@@ -101,6 +94,9 @@ T pattern_transform_reduce(InputIterator1 first1, InputIterator1 last1, InputIte
             return brick_transform_reduce(i, j, first2 + (i - first1),
                 init, binary_op1, binary_op2, is_vector);
         });
+#else
+        return T{0};
+#endif
     });
 }
 
@@ -126,15 +122,7 @@ T pattern_transform_reduce(InputIterator first, InputIterator last, T init, Bina
 
 template<class InputIterator, class T, class BinaryOperation, class UnaryOperation, class IsVector>
 T pattern_transform_reduce(InputIterator first, InputIterator last, T init, BinaryOperation binary_op, UnaryOperation unary_op, IsVector is_vector, /*is_parallel=*/std::true_type) {
-    return except_handler([&]() {
-        return par_backend::parallel_transform_reduce(first, last,
-            [unary_op](InputIterator i) mutable {return unary_op(*i); },
-            init,
-            binary_op,
-            [unary_op, binary_op, is_vector](InputIterator i, InputIterator j, T init) {
-            return brick_transform_reduce(i, j, init, binary_op, unary_op, is_vector);
-        });
-    });
+    return brick_transform_reduce(first, last, init, binary_op, unary_op, is_vector);
 }
 
 
@@ -174,18 +162,7 @@ OutputIterator pattern_transform_scan(InputIterator first, InputIterator last, O
     typedef typename std::iterator_traits<InputIterator>::difference_type difference_type;
 
     return except_handler([=]() {
-        par_backend::parallel_transform_scan(
-            last-first,
-            [first, unary_op](size_t i) mutable {return unary_op(first[i]); },
-            init,
-            binary_op,
-            [first, unary_op, binary_op, is_vector](difference_type i, difference_type j, T init) {
-            return brick_transform_reduce(first+i, first+j, init, binary_op, unary_op, is_vector);
-        },
-        [first, unary_op, binary_op, result](difference_type i, difference_type j, T init) {
-        return brick_transform_scan(first+i, first+j, result+i, unary_op, init, binary_op, Inclusive()).second;
-        });
-        return result+(last-first);
+        return brick_transform_scan(first, last, result, unary_op, init, binary_op, Inclusive()).first;
     });
 }
 

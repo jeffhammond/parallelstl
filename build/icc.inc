@@ -28,12 +28,8 @@ endif
 # XHOST_FLAG = $(KEY)xSSE4.1 -no-vec
 # XHOST_FLAG = $(KEY)xMIC-AVX512 -no-vec
 
-ifeq ($(backend),omp)
-    CPLUS_FLAGS += $(QKEY)openmp
-    OPENMP_LDFLAGS = $(QKEY)openmp
-else
-    CPLUS_FLAGS += $(QKEY)openmp-simd
-endif
+CPLUS_FLAGS += $(QKEY)openmp
+OPENMP_LDFLAGS = $(QKEY)openmp
 CPLUS_FLAGS += $(FQKEY)MMD
 CPLUS_FLAGS += $(FQKEY)std=$(stdver)
 CPLUS_FLAGS +=  $(QKEY)opt-report=$(vecreport) $(QKEY)opt-report-phase vec

@@ -13,8 +13,7 @@ For sequential execution, it relies on an available implementation of the C++ st
 To use Parallel STL, you must have the following software installed:
 * C++ compiler with:
   * Support for C++11
-  * Support for OpenMP* 4.0 SIMD constructs
-* Intel(R) Threading Building Blocks (Intel(R) TBB) which is available to download in the GitHub [repository](https://github.com/01org/tbb/)
+  * Support for OpenMP* 4.0 constructs
 
 ## Release Information
 Here are the latest [Changes](CHANGES) and [Release Notes](doc/Release_Notes.txt) (contains system requirements and known issues).
@@ -27,14 +26,7 @@ Parallel STL is licensed under [Apache License Version 2.0](LICENSE).
 
 ## Support
 Please report issues and suggestions via
-[GitHub issues](https://github.com/intel/parallelstl/issues) or start a topic on the
-[Intel(R) TBB forum](http://software.intel.com/en-us/forums/intel-threading-building-blocks/).
-
-## How to Contribute
-Please, read the instructions on the official [Intel(R) TBB open source site](https://www.threadingbuildingblocks.org/submit-contribution).
-
-## Engineering team contacts
-* [E-mail us.](mailto:inteltbbdevelopers@intel.com)
+[GitHub issues](https://github.com/jeffhammond/parallelstl/issues)
 
 ------------------------------------------------------------------------
 Intel and the Intel logo are trademarks of Intel Corporation or its subsidiaries in the U.S. and/or other countries.

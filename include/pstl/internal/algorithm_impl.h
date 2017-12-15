@@ -30,16 +30,6 @@
 #include "execution_policy_impl.h"
 #include "simd_impl.h"
 
-#if __PSTL_USE_TBB
-    #error TBB
-    #include "parallel_impl_tbb.h"
-#elif __PSTL_USE_OPENMP
-    #include "parallel_impl_openmp.h"
-#else
-    #error NONE
-    __PSTL_PRAGMA_MESSAGE("Backend was not specified");
-#endif
-
 namespace pstl {
 namespace internal {
 
@@ -66,8 +56,7 @@ bool pattern_any_of( InputIterator first, InputIterator last, Pred pred, IsVecto
 template<class InputIterator, class Pred, class IsVector>
 bool pattern_any_of( InputIterator first, InputIterator last, Pred pred, IsVector is_vector, /*parallel=*/std::true_type ) {
     return except_handler([=]() {
-        return par_backend::parallel_or( first, last,
-            [pred, is_vector](InputIterator i, InputIterator j) {return brick_any_of(i, j, pred, is_vector);} );
+        return brick_any_of(first,last,pred,is_vector);
     });
 }
 
@@ -112,9 +101,7 @@ void pattern_walk1( Iterator first, Iterator last, Function f, IsVector is_vecto
 template<class Iterator, class Function, class IsVector>
 void pattern_walk1( Iterator first, Iterator last, Function f, IsVector is_vector, /*parallel=*/std::true_type ) {
     except_handler([=]() {
-        par_backend::parallel_for( first, last, [f,is_vector](Iterator i, Iterator j) {
-            brick_walk1(i,j,f,is_vector);
-        });
+        brick_walk1( first, last, f, is_vector );
     });
 }
 
@@ -126,9 +113,7 @@ void pattern_walk_brick( Iterator first, Iterator last, Brick brick, /*parallel=
 template<class Iterator, class Brick>
 void pattern_walk_brick( Iterator first, Iterator last, Brick brick, /*parallel=*/std::true_type ) {
     except_handler([=]() {
-        par_backend::parallel_for( first, last, [brick](Iterator i, Iterator j) {
-            brick(i,j);
-        });
+        brick(first, last);
     });
 }
 
@@ -157,9 +142,7 @@ void pattern_it_walk1( Iterator first, Iterator last, Function f, IsVector is_ve
 template<class Iterator, class Function, class IsVector>
 void pattern_it_walk1( Iterator first, Iterator last, Function f, IsVector is_vector, /*parallel=*/std::true_type ) {
     except_handler([=]() {
-        par_backend::parallel_for( first, last, [f,is_vector](Iterator i, Iterator j) {
-            brick_it_walk1(i,j,f,is_vector);
-        });
+        brick_it_walk1( first, last, f, is_vector );
     });
 }
 
@@ -195,10 +178,7 @@ InputIterator pattern_walk_brick_n( InputIterator first, Size n, Brick brick, /*
 template<class RandomAccessIterator, class Size, class Brick>
 RandomAccessIterator pattern_walk_brick_n( RandomAccessIterator first, Size n, Brick brick, /*is_parallel=*/std::true_type ) {
     return except_handler([=]() {
-        par_backend::parallel_for(first, first + n, [brick](RandomAccessIterator i, RandomAccessIterator j) {
-            brick(i, j-i);
-        });
-        return first + n;
+        return brick(first, n);
     });
 }
 
@@ -264,13 +244,7 @@ Iterator2 pattern_walk2( Iterator1 first1, Iterator1 last1, Iterator2 first2, Fu
 template<class Iterator1, class Iterator2, class Function, class IsVector>
 Iterator2 pattern_walk2(Iterator1 first1, Iterator1 last1, Iterator2 first2, Function f, IsVector is_vector, /*parallel=*/std::true_type ) {
     return except_handler([=]() {
-        par_backend::parallel_for(
-            first1, last1,
-            [f,first1,first2,is_vector](Iterator1 i, Iterator1 j) {
-                brick_walk2(i,j,first2+(i-first1),f,is_vector);
-            }
-        );
-        return first2+(last1-first1);
+        return brick_walk2(first1,last1,first2,f,is_vector);
     });
 }
 
@@ -292,26 +266,14 @@ Iterator2 pattern_walk2_brick( Iterator1 first1, Iterator1 last1, Iterator2 firs
 template<class Iterator1, class Iterator2, class Brick>
 Iterator2 pattern_walk2_brick(Iterator1 first1, Iterator1 last1, Iterator2 first2, Brick brick, /*parallel=*/std::true_type ) {
     return except_handler([=]() {
-        par_backend::parallel_for(
-            first1, last1,
-            [first1,first2, brick](Iterator1 i, Iterator1 j) {
-                brick(i,j,first2+(i-first1));
-            }
-        );
-        return first2+(last1-first1);
+        return brick(first1,last1,first2);
     });
 }
 
 template<class Iterator1, class Size, class Iterator2, class Brick>
 Iterator2 pattern_walk2_brick_n(Iterator1 first1, Size n, Iterator2 first2, Brick brick, /*parallel=*/std::true_type ) {
     return except_handler([=]() {
-        par_backend::parallel_for(
-            first1, first1+n,
-            [first1,first2, brick](Iterator1 i, Iterator1 j) {
-                brick(i, j-i, first2+(i-first1));
-            }
-        );
-        return first2 + n;
+        return brick(first1, n, first2);
     });
 }
 
@@ -358,13 +320,7 @@ Iterator2 pattern_it_walk2( Iterator1 first1, Iterator1 last1, Iterator2 first2,
 template<class Iterator1, class Iterator2, class Function, class IsVector>
 Iterator2 pattern_it_walk2(Iterator1 first1, Iterator1 last1, Iterator2 first2, Function f, IsVector is_vector, /*parallel=*/std::true_type ) {
     return except_handler([=]() {
-        par_backend::parallel_for(
-            first1, last1,
-            [f,first1,first2,is_vector](Iterator1 i, Iterator1 j) {
-                brick_it_walk2(i,j,first2+(i-first1),f,is_vector);
-            }
-        );
-        return first2+(last1-first1);
+        return brick_it_walk2(first1,last1,first2,f,is_vector);
     });
 }
 
@@ -404,12 +360,7 @@ Iterator3 pattern_walk3( Iterator1 first1, Iterator1 last1, Iterator2 first2, It
 template<class Iterator1, class Iterator2, class Iterator3, class Function, class IsVector>
 Iterator3 pattern_walk3(Iterator1 first1, Iterator1 last1, Iterator2 first2, Iterator3 first3, Function f, IsVector is_vector, /*parallel=*/std::true_type ) {
     return except_handler([=]() {
-        par_backend::parallel_for(
-            first1, last1,
-            [f, first1, first2, first3, is_vector](Iterator1 i, Iterator1 j) {
-            brick_walk3(i, j, first2+(i-first1), first3+(i-first1), f, is_vector);
-        });
-        return first3+(last1-first1);
+        return brick_walk3(first1, last1, first2, first3, f, is_vector);
     });
 }
 
@@ -435,9 +386,7 @@ InputIterator pattern_find_if( InputIterator first, InputIterator last, Predicat
 template<class InputIterator, class Predicate, class IsVector>
 InputIterator pattern_find_if( InputIterator first, InputIterator last, Predicate pred, IsVector is_vector, /*is_parallel=*/std::true_type ) {
     return except_handler([=]() {
-        return par_backend::parallel_first( first, last, [pred,is_vector](InputIterator i, InputIterator j) {
-            return brick_find_if(i,j,pred,is_vector);
-         });
+        return brick_find_if(first,last,pred,is_vector);
     });
 }
 
@@ -683,32 +632,6 @@ template<class InputIterator, class OutputIterator, class UnaryPredicate, class 
 OutputIterator pattern_copy_if(InputIterator first, InputIterator last, OutputIterator result, UnaryPredicate pred, IsVector is_vector, /*parallel=*/std::true_type) {
     typedef typename std::iterator_traits<InputIterator>::difference_type difference_type;
     const difference_type n = last-first;
-    if( difference_type(1) < n ) {
-        par_backend::raw_buffer mask_buf(n*sizeof(bool));
-        if( mask_buf ) {
-            return except_handler([n, first, last, result, is_vector, pred, &mask_buf]() {
-                bool* mask = static_cast<bool*>(mask_buf.get());
-                difference_type m;
-                par_backend::parallel_strict_scan( n, difference_type(0),
-                    [=](difference_type i, difference_type len) {                               // Reduce
-                        return brick_calc_mask_1<difference_type>(first+i, first+(i+len),
-                                                                 mask + i,
-                                                                 pred,
-                                                                 is_vector).first;
-                    },
-                    std::plus<difference_type>(),                                               // Combine
-                    [=](difference_type i, difference_type len, difference_type initial) {      // Scan
-                        brick_copy_by_mask(first+i, first+(i+len),
-                                                            result+initial,
-                                                            mask + i,
-                                                            is_vector);
-                    },
-                    [&m](difference_type total) {m=total;});
-                return result + m;
-            });
-        }
-    }
-    // Out of memory or trivial sequence - use serial algorithm
     return brick_copy_if(first, last, result, pred, is_vector);
 }
 
@@ -779,44 +702,6 @@ DifferenceType brick_calc_mask_2(InputIterator first, InputIterator last, bool* 
 template<class InputIterator, class OutputIterator, class BinaryPredicate, class IsVector>
 OutputIterator pattern_unique_copy(InputIterator first, InputIterator last, OutputIterator result, BinaryPredicate pred, IsVector is_vector, /*parallel=*/std::true_type) {
     typedef typename std::iterator_traits<InputIterator>::difference_type difference_type;
-    const difference_type n = last-first;
-    if( difference_type(2)<n ) {
-        par_backend::raw_buffer mask_buf(n*sizeof(bool));
-        if( difference_type(2)<n && mask_buf ) {
-            return except_handler([n, first, result, pred, is_vector, &mask_buf]() {
-                bool* mask = static_cast<bool*>(mask_buf.get());
-                difference_type m;
-                par_backend::parallel_strict_scan( n, difference_type(0),
-                    [=](difference_type i, difference_type len) -> difference_type {          // Reduce
-                        difference_type extra = 0;
-                        if( i==0 ) {
-                            // Special boundary case
-                            mask[i] = true;
-                            if( --len==0 ) return 1;
-                            ++i;
-                            ++extra;
-                        }
-                        return brick_calc_mask_2<difference_type>(
-                            first+i, first+(i+len),
-                            mask + i,
-                            pred,
-                            is_vector) + extra;
-                    },
-                    std::plus<difference_type>(),                                               // Combine
-                    [=](difference_type i, difference_type len, difference_type initial) {      // Scan
-                        // Phase 2 is same as for pattern_copy_if
-                        brick_copy_by_mask(
-                            first+i, first+(i+len),
-                            result+initial,
-                            mask + i,
-                            is_vector);
-                    },
-                    [&m](difference_type total) {m=total;});
-                return result + m;
-            });
-        }
-    }
-    // Out of memory or trivial sequence - use serial algorithm
     return brick_unique_copy(first, last, result, pred, is_vector);
 }
 
@@ -1093,35 +978,6 @@ pattern_partition_copy(InputIterator first, InputIterator last, OutputIterator1 
     typedef typename std::iterator_traits<InputIterator>::difference_type difference_type;
     typedef std::pair<difference_type, difference_type> return_type;
     const difference_type n = last - first;
-    if (difference_type(1) < n) {
-        par_backend::raw_buffer mask_buf(n * sizeof(bool));
-        if (mask_buf) {
-            return except_handler([n, first, last, out_true, out_false, is_vector, pred, &mask_buf]() {
-                bool* mask = static_cast<bool*>(mask_buf.get());
-                return_type m;
-                par_backend::parallel_strict_scan(n, std::make_pair(difference_type(0), difference_type(0)),
-                    [=](difference_type i, difference_type len) {                             // Reduce
-                    return brick_calc_mask_1<difference_type>(first + i, first + (i + len),
-                        mask + i,
-                        pred,
-                        is_vector);
-                },
-                    [](const return_type& x, const return_type& y)-> return_type {
-                    return std::make_pair(x.first + y.first, x.second + y.second);
-                },                                                                            // Combine
-                    [=](difference_type i, difference_type len, return_type initial) {        // Scan
-                    brick_partition_by_mask(first + i, first + (i + len),
-                        out_true + initial.first,
-                        out_false + initial.second,
-                        mask + i,
-                        is_vector);
-                },
-                    [&m](return_type total) {m = total; });
-                return std::make_pair(out_true + m.first, out_false + m.second);
-            });
-        }
-    }
-    // Out of memory or trivial sequence - use serial algorithm
     return brick_partition_copy(first, last, out_true, out_false, pred, is_vector);
 }
 
@@ -1138,10 +994,7 @@ void pattern_sort(RandomAccessIterator first, RandomAccessIterator last, Compare
 template<class RandomAccessIterator, class Compare, class IsVector>
 void pattern_sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp, IsVector /*is_vector*/, /*is_parallel=*/std::true_type, /*is_move_constructible=*/std::true_type ) {
     except_handler([=]() {
-        par_backend::parallel_stable_sort(first, last, comp,
-            [](RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
-            std::sort(first, last, comp);
-        });
+        std::sort(first, last, comp);
     });
 }
 
@@ -1157,10 +1010,7 @@ void pattern_stable_sort(RandomAccessIterator first, RandomAccessIterator last, 
 template<class RandomAccessIterator, class Compare, class IsVector>
 void pattern_stable_sort(RandomAccessIterator first, RandomAccessIterator last, Compare comp, IsVector /*is_vector*/, /*is_parallel=*/std::true_type) {
     except_handler([=]() {
-        par_backend::parallel_stable_sort(first, last, comp,
-            [](RandomAccessIterator first, RandomAccessIterator last, Compare comp) {
-            std::stable_sort(first, last, comp);
-        });
+        std::stable_sort(first, last, comp);
     });
 }
 
@@ -1238,9 +1088,7 @@ bool pattern_equal(InputIterator1 first1, InputIterator1 last1, InputIterator2 f
 template<class InputIterator1, class InputIterator2, class BinaryPredicate, class IsVector>
 bool pattern_equal(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2, BinaryPredicate p, IsVector vec, /*is_parallel=*/std::true_type) {
     return except_handler([=]() {
-        return !par_backend::parallel_or(first1, last1,
-            [first1, first2, p, vec](InputIterator1 i, InputIterator1 j) {return !brick_equal(i, j,
-                first2 + (i - first1), p, vec); });
+        return simd_first(first1, last1-first1, first2, not_pred<BinaryPredicate>(p)).first == last1;
     });
 }
 
@@ -1270,12 +1118,7 @@ typename std::iterator_traits<InputIterator>::difference_type
 pattern_count(InputIterator first, InputIterator last, Predicate pred, /* is_parallel */ std::true_type, IsVector vec) {
     typedef typename std::iterator_traits<InputIterator>::difference_type size_type;
     return except_handler([=]() {
-        return par_backend::parallel_reduce(first, last, size_type(0),
-            [pred, vec](InputIterator begin, InputIterator end, size_type value)->size_type {
-            return value + brick_count(begin, end, pred, vec);
-            },
-            std::plus<size_type>()
-        );
+        return brick_count(first, last, pred, vec);
     });
 }
 
@@ -1303,33 +1146,7 @@ ForwardIt pattern_adjacent_find(ForwardIt first, ForwardIt last, BinaryPredicate
         return last;
 
     return except_handler([=]() {
-        return par_backend::parallel_reduce(first, last, last,
-            [last, pred, vec, or_semantic](ForwardIt begin, ForwardIt end, ForwardIt value)->ForwardIt {
-
-            // TODO: investigate performance benefits from the use of shared variable for the result,
-            // checking (compare_and_swap idiom) its value at first.
-            if (or_semantic && value < last) {//found
-                par_backend::cancel_execution();
-                return value;
-            }
-
-            if (value > begin) {
-                // modify end to check the predicate on the boundary values;
-                // TODO: to use a custom range with boundaries overlapping
-                // TODO: investigate what if we remove "if" below and run algorithm on range [first, last-1)
-                // then check the pair [last-1, last)
-                if (end != last) 
-                    ++end;
-
-                //correct the global result iterator if the "brick" returns a local "last"
-                const ForwardIt res = brick_adjacent_find(begin, end, pred, vec, or_semantic);
-                if (res < end)
-                    value = res;
-            }
-            return value;
-        },
-            [](ForwardIt x, ForwardIt y)->ForwardIt { return x < y ? x : y; } //reduce a value
-        );
+        return brick_adjacent_find(first, last, pred, vec, or_semantic);
     });
 }
 
@@ -1380,8 +1197,7 @@ void pattern_fill(ForwardIterator first, ForwardIterator last, const T& value, /
 template<class ForwardIterator, class T, class IsVector>
 ForwardIterator pattern_fill(ForwardIterator first, ForwardIterator last, const T& value, /*is_parallel=*/std::true_type, IsVector vec) {
     return except_handler([=]() {
-        par_backend::parallel_for(first, last, [&value, vec](ForwardIterator begin, ForwardIterator end) {
-            brick_fill(begin, end, value, vec); });
+        brick_fill(first, last, value, vec);
         return last;
     });
 }
@@ -1427,8 +1243,7 @@ void pattern_generate(ForwardIterator first, ForwardIterator last, Generator g, 
 template<class ForwardIterator, class Generator, class IsVector>
 ForwardIterator pattern_generate(ForwardIterator first, ForwardIterator last, Generator g, /*is_parallel=*/std::true_type, IsVector vec) {
     return except_handler([=]() {
-        par_backend::parallel_for(first, last, [g, vec](ForwardIterator begin, ForwardIterator end) {
-            brick_generate(begin, end, g, vec); });
+        brick_generate(first, last, g, vec);
         return last;
     });
 }
@@ -1713,18 +1528,7 @@ ForwardIterator pattern_min_element(ForwardIterator first, ForwardIterator last,
     if(first == last)
         return last;
 
-    return except_handler([=]() {
-        return par_backend::parallel_reduce(
-            first + 1, last, first,
-            [=](ForwardIterator begin, ForwardIterator end, ForwardIterator init) -> ForwardIterator {
-                const ForwardIterator subresult = brick_min_element(begin, end, comp, is_vector);
-                return cmp_iterators_by_values(init, subresult, comp);
-            },
-            [=](ForwardIterator it1, ForwardIterator it2) -> ForwardIterator {
-                return cmp_iterators_by_values(it1, it2, comp);
-            }
-        );
-    });
+    return brick_min_element(first, last, comp, is_vector);
 }
 
 //------------------------------------------------------------------------
@@ -1752,20 +1556,7 @@ std::pair<ForwardIterator, ForwardIterator> pattern_minmax_element(ForwardIterat
     if(first == last)
         return std::make_pair(first, first);
 
-    return except_handler([=]() {
-        typedef std::pair<ForwardIterator, ForwardIterator> result_t;
-
-        return par_backend::parallel_reduce(
-            first + 1, last, std::make_pair(first, first),
-            [=](ForwardIterator begin, ForwardIterator end, result_t init) -> result_t {
-                const result_t subresult = brick_minmax_element(begin, end, comp, is_vector);
-                return std::make_pair(cmp_iterators_by_values(subresult.first, init.first, comp), cmp_iterators_by_values(init.second, subresult.second, not_pred<Compare>(comp)));
-            },
-            [=](result_t p1, result_t p2) -> result_t {
-                return std::make_pair(cmp_iterators_by_values(p1.first, p2.first, comp), cmp_iterators_by_values(p2.second, p1.second, not_pred<Compare>(comp)));
-            }
-        );
-    });
+    return brick_minmax_element(first, last, comp, is_vector);
 }
 
 //------------------------------------------------------------------------
@@ -1800,11 +1591,7 @@ std::pair<InputIterator1, InputIterator2> pattern_mismatch(InputIterator1 first1
 template <class InputIterator1, class InputIterator2, class Predicate, class IsVector>
 std::pair<InputIterator1, InputIterator2> pattern_mismatch(InputIterator1 first1, InputIterator1 last1, InputIterator2 first2, InputIterator2 last2, Predicate pred, IsVector is_vector, /* is_parallel = */ std::true_type) noexcept {
     return except_handler([=]() {
-        auto n = std::min(last1 - first1, last2 - first2);
-        auto result = par_backend::parallel_first(first1, first1+n, [first1, first2, pred, is_vector](InputIterator1 i, InputIterator1 j) {
-            return brick_mismatch(i, j, first2 + (i - first1), first2 + (j - first1), pred, is_vector).first;
-        });
-        return std::make_pair(result, first2 + (result - first1));
+        return brick_mismatch(first1, last1, first2, last2, pred, is_vector);
     });
 }
 

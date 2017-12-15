@@ -30,7 +30,6 @@ compiler ?= icpc
 COMPILER_NOLOGO_KEY =
 OPTIMIZATION_DISABLED_FLAGS = $(KEY)O0 $(KEY)g
 OPTIMIZATION_ENABLED_FLAGS +=  $(KEY)O2
-TBB_LIB_NAME = tbb
 CPLUS = $(compiler)
 LD = $(CPLUS)
 
@@ -50,11 +49,6 @@ endif
 ifneq ($(PSTL_LIB_NAME), )
     PSTL_LIB_LINK += $(LINK_KEY)$(PSTL_LIB_NAME)$(PSTL_LIB_EXT)
 endif
-
-ifneq (, $(filter $(backend), tbb))
-    DYN_LDFLAGS += $(LINK_KEY)$(TBB_LIB_NAME)
-endif
-
 
 ifeq ($(arch),intel64)
     PSTL_ARCH = $(MACHINE_KEY)64

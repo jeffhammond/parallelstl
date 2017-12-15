@@ -16,23 +16,13 @@
 #
 #
 
-#override compiler:=g++
-
 XHOST_FLAG = $(KEY)march=native -fno-tree-vectorize
 #    XHOST_FLAG = $(KEY)mavx2 -fno-tree-vectorize
 #    XHOST_FLAG = $(KEY)mavx512f -fno-tree-vectorize
- DYN_LDFLAGS += $(LINK_KEY)stdc++
-# GCC 4.8.5 and early doesn't  support -fopenmp-simd; GCC 4.9 supports OpenMP 4.0 for C/C++
-ifneq (, $(shell $(compiler) -dumpversion | egrep  "^4\.9\.[0-9]"))
-    CPLUS_FLAGS += -fopenmp-simd
-endif
+DYN_LDFLAGS += $(LINK_KEY)stdc++
 ifneq (, $(shell $(compiler) -dumpversion | egrep  "^[5-9]\.[0-9]\.[0-9]"))
-    ifeq ($(backend),omp)
-        CPLUS_FLAGS += -fopenmp
-        OPENMP_LDFLAGS = -fopenmp
-    else
-        CPLUS_FLAGS += -fopenmp-simd
-    endif
+    CPLUS_FLAGS += -fopenmp
+    OPENMP_LDFLAGS = -fopenmp
 #   CPLUS_FLAGS += -fdump-rtl-loop2 #use this option to enable optimization report
 endif
 

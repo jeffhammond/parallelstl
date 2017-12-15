@@ -16,21 +16,11 @@
 #
 #
 
-#override compiler:=clang++
-
-ifneq ($(target),android)
-    PSTL_ARCH += $(KEY)march=native
-endif
-
 XHOST_FLAG = -fno-vectorize
 CPLUS_FLAGS += $(FQKEY)std=$(stdver)
 # XHOST_FLAG = $(KEY)mavx2 -fno-vectorize
 # XHOST_FLAG = $(KEY)mavx512f -fno-vectorize
 # DYN_LDFLAGS += $(LINK_KEY)c++ 
 # CPLUS_FLAGS += -stdlib=libc++
-ifeq ($(backend),omp)
-    CPLUS_FLAGS += -fopenmp
-    OPENMP_LDFLAGS = -fopenmp
-else
-    # CPLUS_FLAGS += -fopenmp-simd //it will be supported in he future version
-endif
+CPLUS_FLAGS += -fopenmp
+OPENMP_LDFLAGS = -fopenmp

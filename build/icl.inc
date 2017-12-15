@@ -24,12 +24,8 @@ XHOST_FLAG = $(QKEY)vec-
 # XHOST_FLAG = $(QKEY)xSSE4.1
 # XHOST_FLAG = $(QKEY)xMIC-AVX512
 CPLUS_FLAGS += $(QKEY)opt-assume-safe-padding
-ifeq ($(backend),omp)
-    CPLUS_FLAGS += $(QKEY)openmp
-    OPENMP_LDFLAGS = $(QKEY)openmp
-else
-    CPLUS_FLAGS += $(QKEY)openmp-simd
-endif
+CPLUS_FLAGS += $(QKEY)openmp
+OPENMP_LDFLAGS = $(QKEY)openmp
 CPLUS_FLAGS += $(FQKEY)MMD
 CPLUS_FLAGS += $(FQKEY)std=$(stdver)
 CPLUS_FLAGS += $(QKEY)opt-report:$(vecreport) $(QKEY)opt-report-phase:vec $(QKEY)opt-report-phase:loop
